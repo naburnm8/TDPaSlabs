@@ -91,8 +91,8 @@ class RTOS:  # Класс, реализующий логику пересылк�
             task = self.tasks[i]  # Следующая задача из памяти
             tasks_distribution = dict(sorted(tasks_distribution.items(), key=lambda item: len(item[1]), reverse=False))  # Ищем наименее загруженный процессор
             least_loaded_processor = list(tasks_distribution.keys())[0]
-            tasks_distribution[least_loaded_processor].append(task)  # Добавляем задачу к наименее загруженному процессору
-            print(f"Задача с id {task.task_id} была присвоена процессору {least_loaded_processor.processor_id}")
+            tasks_distribution[least_loaded_processor].append(task)  # Пересылаем задачу к наименее загруженному процессору
+            print(f"Задача с id {task.task_id} была переслана процессору {least_loaded_processor.processor_id}")
             for key in tasks_distribution.keys():
                 for task in tasks_distribution[key]:
                     key.execute(task)  # После присваивания исполняем задачи
