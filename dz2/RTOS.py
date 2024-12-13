@@ -29,11 +29,12 @@ class Task:  # Объект, содержащий информацию об од
 
 
 class Frame:  # Класс, являющийся моделью кадра по стандарту IEEE P802.3ba™/D0.9
-    def __init__(self, max_size: int = 12144, headers_size: int = 144):  # Максимальные размеры кадра и размер заголовков из стандарта
+    def __init__(self, max_size: int = 12144, headers_size: int = 144, min_size: int = 512):  # Максимальные размеры кадра и размер заголовков из стандарта
         self.max_size = max_size
         self.headers_size = headers_size
         self.payload_max_size = max_size - headers_size  # В соответствии с логикой деления на кадры, задаем максимальный размер посылки
         self.payload = []  # Храним посылку, это список задач.
+        self.min_size = min_size
 
     @staticmethod
     def count_payload(payload: list) -> int:  # Метод, считающий текущий размер посылки
@@ -48,6 +49,8 @@ class Frame:  # Класс, являющийся моделью кадра по 
         return False  # иначе, False.
 
     def get_size(self) -> int:
+        if Frame.count_payload(self.payload) + self.headers_size < self.min_size:
+            return self.min_size
         return Frame.count_payload(self.payload) + self.headers_size
     def __str__(self): # Для удобства вывода объектов класса
         tasks_text = ""
