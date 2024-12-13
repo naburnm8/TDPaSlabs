@@ -29,10 +29,10 @@ class Task:  # Объект, содержащий информацию об од
 
 
 class Frame:  # Класс, являющийся моделью кадра по стандарту IEEE P802.3ba™/D0.9
-    def __init__(self, min_size: int = 512, headers_size: int = 144):  # Минимальные размеры кадра и размер заголовков из стандарта
-        self.min_size = min_size
+    def __init__(self, max_size: int = 12144, headers_size: int = 144):  # Максимальные размеры кадра и размер заголовков из стандарта
+        self.max_size = max_size
         self.headers_size = headers_size
-        self.payload_max_size = min_size - headers_size  # В соответствии с логикой деления на кадры, задаем максимальный размер посылки
+        self.payload_max_size = max_size - headers_size  # В соответствии с логикой деления на кадры, задаем максимальный размер посылки
         self.payload = []  # Храним посылку, это список задач.
 
     @staticmethod
@@ -46,6 +46,9 @@ class Frame:  # Класс, являющийся моделью кадра по 
             self.payload.append(payload)
             return True  # Возвращаем True если добавили
         return False  # иначе, False.
+
+    def get_size(self) -> int:
+        return Frame.count_payload(self.payload) + self.headers_size
     def __str__(self): # Для удобства вывода объектов класса
         tasks_text = ""
         for task in self.payload:
@@ -72,7 +75,7 @@ class IEEE100GBIT:  # Класс, являющийся моделью канал
     def count_transmission_time(self) -> float:
         total_bits_size = 0
         for frame in self.frames:
-            total_bits_size += frame.min_size  # Подсчитываем в сумму размер каждого из кадров из разделения
+            total_bits_size += frame.get_size()  # Подсчитываем в сумму размер каждого из кадров из разделения
         return total_bits_size / self.data_rate  # и возвращаем время передачи путём деления на скорость передачи
 
     def __str__(self):  # Для удобства вывода объектов класса
