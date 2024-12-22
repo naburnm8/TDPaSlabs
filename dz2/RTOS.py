@@ -3,7 +3,7 @@ import random
 
 
 class Task:  # Объект, содержащий информацию об одной задаче для исполнения
-    def __init__(self, task_id: int, execution_time: int, size_bits: int = 128):
+    def __init__(self, task_id: int, execution_time: int, size_bits: int = 64):
         self.task_id = task_id  # Уникальное число, чтобы идентифицировать задачу
         self.execution_time = execution_time  # Время выполнения задачи в тактах
         self.remaining_time = self.execution_time  # Задача хранит сколько осталось тактов до её выполнения
@@ -15,11 +15,12 @@ class Task:  # Объект, содержащий информацию об од
             self.remaining_time -= 1  # Уменьшаем количество тактов для завершения по вызову run()
 
     @staticmethod
-    def generate_random_tasks(n: int) -> list:  # Генерация случайных задач, для удобства
+    def generate_random_tasks(n: int, max_instrucion_size: int = 64) -> list:  # Генерация случайных задач, для удобства
         generated_tasks = []
         for i in range(n):
             generated_exec_time = random.randint(1, 100)
-            generated_size_bits = random.randint(1, 128)
+            generated_n_instructions = random.randint(1, 100)
+            generated_size_bits = generated_n_instructions * max_instrucion_size
             generated_task = Task(task_id=i, execution_time=generated_exec_time, size_bits=generated_size_bits)
             generated_tasks.append(generated_task)
         return generated_tasks
@@ -103,11 +104,12 @@ def print_to_processor_stream(processor_id: int, msg: str) -> None:
         file.write(msg)
 
 class Processor:  # Класс, играющий роль процессора, исполняющего задачи
-    def __init__(self, processor_id: int, frequency: int, interrupt_on: int, start_time: float = 0):
+    def __init__(self, processor_id: int, frequency: int, interrupt_on: int, start_time: float = 0, n_cores: int = 8):
         self.processor_id = processor_id  # Уникальный идентификатор
         self.frequency = frequency  # Частота процессора, для перевода тактов в секунды
         self.interrupt_on = interrupt_on  # Количество тактов, выделенных под одну задачу
         self.total_time_spent = 0  # Процессор хранит сколько всего тактов он проработал
+        self.n_cores = n_cores # Процессор хранит количество ядер
         self.start_time = start_time
 
     def __hash__(self):
@@ -118,7 +120,7 @@ class Processor:  # Класс, играющий роль процессора, 
 
     def execute(self, task: Task):  # Метод для исполнения задачи до прерывания
         time_spent = 0  # Учет затраченных тактов на задачу
-        for i in range(self.interrupt_on):  # Исполняем столько тактов, сколько можно до прерывания
+        for i in range(self.interrupt_on * self.n_cores):  # Исполняем столько тактов, сколько можно до прерывания
             if task.remaining_time > 0:  # Заходим в тело только если задача не была уже выполнена
                 time_spent += 1
                 task.run()
@@ -194,10 +196,10 @@ def clear_streams(processors: list) -> None:
 
 if __name__ == '__main__':
     n_processors = 4
-    frequency = 2.5 * 10**9  # Тактовая частота нашего процессора
+    frequency = 1 * 10**9  # Тактовая частота нашего процессора
     interrupt_on = 4
     task_memory = Memory()
-    n_tasks = 8
+    n_tasks = 1000
     rand_tasks = Task.generate_random_tasks(n_tasks)
     for task in rand_tasks:
         print(f"Запланирована задача с id {task.task_id} и продолжительностью {task.execution_time} тактов")
@@ -205,8 +207,10 @@ if __name__ == '__main__':
         task_memory.add(rand_tasks[i], i)
     rtos = RTOS(n_processors, frequency, interrupt_on, task_memory)
     clear_streams(rtos.processors)
-    rtos.launch_round_robin()
     print(rtos.ethernet)
+    rtos.launch_round_robin()
+
+
 
 
 
