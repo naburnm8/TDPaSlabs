@@ -202,7 +202,7 @@ if __name__ == '__main__':
     frequency = 1 * 10**9  # Тактовая частота нашего процессора
     interrupt_on = 4
     task_memory = Memory()
-    n_tasks = 1000
+    n_tasks = 4000
     rand_tasks = Task.generate_random_tasks(n_tasks)
     for task in rand_tasks:
         print(f"Запланирована задача с id {task.task_id} и продолжительностью {task.execution_time} тактов")
