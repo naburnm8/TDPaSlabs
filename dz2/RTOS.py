@@ -3,12 +3,17 @@ import random
 
 
 class Task:  # Объект, содержащий информацию об одной задаче для исполнения
-    def __init__(self, task_id: int, execution_time: int, size_bits: int = 64):
+    def __init__(self, task_id: int, execution_time: int, size_bits: int = 64, task_type: str = 'PERIODIC_TASK', ttl: int = -1):
         self.task_id = task_id  # Уникальное число, чтобы идентифицировать задачу
         self.execution_time = execution_time  # Время выполнения задачи в тактах
         self.remaining_time = self.execution_time  # Задача хранит сколько осталось тактов до её выполнения
         self.cycle = 0  # Задача хранит сколько раз она была отправлена в ожидание процессором
         self.size_bits = size_bits  # Размер задачи в битах
+        self.task_type = task_type  # Тип задачи
+        if ttl != -1:
+            self.ttl = ttl  # Время жизни
+        else:
+            self.ttl = execution_time
 
     def run(self):
         if self.remaining_time > 0:
@@ -26,7 +31,7 @@ class Task:  # Объект, содержащий информацию об од
         return generated_tasks
 
     def __str__(self):
-        return f'ID задачи: {self.task_id}, время выполнения: {self.execution_time}'  # Для удобства вывода объектов класса Task
+        return f'ID задачи: {self.task_id}, время выполнения: {self.execution_time}, тип: {self.task_type}'  # Для удобства вывода объектов класса Task
 
 
 class Frame:  # Класс, являющийся моделью кадра по стандарту IEEE P802.3ba™/D0.9
@@ -130,6 +135,10 @@ class Processor:  # Класс, играющий роль процессора, 
                 if task.remaining_time <= 0:
                     print_to_processor_stream(self.processor_id, f"Задача {task.task_id} выполнена на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с.\n")
                     break
+        if task.execution_time - task.remaining_time > task.ttl:
+            task.remaining_time = -1
+            print_to_processor_stream(self.processor_id, f"Задача {task.task_id} превысила TTL на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с., тип задачи: {task.task_type}\n")
+            #print(f"Задача {task.task_id} превысила TTL на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с., тип задачи: {task.task_type}\n")
         if task.remaining_time > 0:
             print_to_processor_stream(self.processor_id, f"Задача {task.task_id} отправлена в ожидание процессором {self.processor_id}, кол-во периодов ожидания: {task.cycle}, время {(self.total_time_spent / self.frequency) + self.start_time} с.\n")
             task.cycle += 1
@@ -191,13 +200,14 @@ class RTOS:  # Класс, реализующий логику пересылк�
         for key in tasks_distribution.keys():
             print(f"Процессор {key.processor_id} завершил свою работу с {tasks_distribution_count[key]} задачами за {(key.total_time_spent / key.frequency) + self.time_of_transfer} с.")
             print_to_processor_stream(key.processor_id, f"КОНЕЦ ФАЙЛА")
+        return tasks_distribution_count
 
 def clear_streams(processors: list) -> None:
     for processor in processors:
         with open(f"proc{processor.processor_id}result.txt", "w", encoding="utf-8") as file:
             file.write("")
 
-if __name__ == '__main__':
+def main():
     n_processors = 4
     frequency = 1 * 10**9  # Тактовая частота нашего процессора
     interrupt_on = 4
