@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from RTOS import IEEE100GBIT
 
 import numpy as np
-def count_avg(distribution: dict):
+def count_avg(distribution: dict) -> float:
     tasks = list(distribution.values())
     n_proc = len(list(distribution.keys()))
     return sum(tasks) / n_proc
 
-def count_stdev(distribution: dict):
+def count_stdev(distribution: dict) -> float:
     sq_stdev = 0
     tasks = list(distribution.values())
     avg = count_avg(distribution)
