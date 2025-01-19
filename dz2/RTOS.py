@@ -153,6 +153,7 @@ class RTOS:  # Класс, реализующий логику пересылк�
         self.ethernet = IEEE100GBIT(self.tasks)  # Формируем список кадров в соответствии с описанной логикой
         self.time_of_transfer = self.ethernet.count_transmission_time()  # Время передачи кадров по каналу связи
         self.processors = []
+        self.tasks_distribution_final = {}
         for i in range(n_processors):
             self.processors.append(Processor(i, frequency, interrupt_on, self.time_of_transfer)) # Формируем список процессоров, которые будут обрабатывать задачи
 
@@ -171,11 +172,13 @@ class RTOS:  # Класс, реализующий логику пересылк�
         for i in range(n_processors):
             tasks_distribution[self.processors[i]] = [] # Для хранения присвоенных задач используем словарь списков
             tasks_distribution_count[self.processors[i]] = 0 # Храним количество задач
+            self.tasks_distribution_final[self.processors[i]] = []
         for i in range(n_tasks):
             task = self.tasks[i]  # Следующая задача из памяти
             tasks_distribution = dict(sorted(tasks_distribution.items(), key=lambda item: len(item[1]), reverse=False))  # Ищем наименее загруженный процессор
             least_loaded_processor = list(tasks_distribution.keys())[0]
             tasks_distribution[least_loaded_processor].append(task) # Пересылаем задачу к наименее загруженному процессору
+            self.tasks_distribution_final[least_loaded_processor].append(task)
             tasks_distribution_count[least_loaded_processor] += 1
             print(f"Задача с id {task.task_id} была переслана процессору {least_loaded_processor.processor_id}")
             for key in tasks_distribution.keys():

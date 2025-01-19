@@ -83,7 +83,7 @@ if __name__ == '__main__':
             print(f"Ожидаемое значение распределения: {st.count_avg(distrib_count)}")
             print(f"Среднее отклонение: {st.count_stdev(distrib_count)}")
             print(f"Относительное среднее отклонение {(st.count_stdev(distrib_count) / st.count_avg(distrib_count)) * 100}%")
-            st.draw_bar(distrib_count)
+            st.draw_all_bars(distrib_count, rtos.ethernet, rtos.tasks_distribution_final)
             exit(0)
         elif command == "-генерация-доп":
             task_memory = rt.Memory()
@@ -127,7 +127,7 @@ if __name__ == '__main__':
             print(f"Ожидаемое значение распределения: {st.count_avg(distrib_count)}")
             print(f"Среднее отклонение: {st.count_stdev(distrib_count)}")
             print(f"Относительное среднее отклонение {(st.count_stdev(distrib_count)/st.count_avg(distrib_count))*100}%")
-            st.draw_bar(distrib_count)
+            st.draw_all_bars(distrib_count, rtos.ethernet, rtos.tasks_distribution_final)
             exit(0)
         elif command == "-выход":
             exit(0)
@@ -142,7 +142,7 @@ if __name__ == '__main__':
             print(f"Ожидаемое значение распределения: {st.count_avg(distrib_count)}")
             print(f"Среднее отклонение: {st.count_stdev(distrib_count)}")
             print(f"Относительное среднее отклонение {(st.count_stdev(distrib_count) / st.count_avg(distrib_count)) * 100}%")
-            st.draw_bar(distrib_count)
+            st.draw_all_bars(distrib_count, rtos.ethernet, rtos.tasks_distribution_final)
             exit(0)
         else:
             print("Команда не распознана")
