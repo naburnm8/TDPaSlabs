@@ -110,6 +110,10 @@ class Memory:  # Класс, играющий роль карты памяти �
 def print_to_processor_stream(processor_id: int, msg: str) -> None:
     with open(f"proc{processor_id}result.txt", "a", encoding="utf-8") as file:
         file.write(msg)
+class Core: #  Класс, играющий роль ядра
+    def __init__(self, core_id: int):
+        self.core_id = core_id
+        self.finished = []
 
 class Processor:  # Класс, играющий роль процессора, исполняющего задачи
     def __init__(self, processor_id: int, frequency: int, interrupt_on: int, start_time: float = 0, n_cores: int = 8):
@@ -118,6 +122,12 @@ class Processor:  # Класс, играющий роль процессора, 
         self.interrupt_on = interrupt_on  # Количество тактов, выделенных под одну задачу
         self.total_time_spent = 0  # Процессор хранит сколько всего тактов он проработал
         self.n_cores = n_cores # Процессор хранит количество ядер
+        self.cores = [Core(i) for i in range(n_cores)]
+        self.core_distribution = {}
+        self.core_distribution_count = {}
+        for core in self.cores:
+            self.core_distribution[core] = []
+            self.core_distribution_count[core] = 0
         self.start_time = start_time
 
     def __hash__(self):
@@ -128,17 +138,23 @@ class Processor:  # Класс, играющий роль процессора, 
 
     def execute(self, task: Task):  # Метод для исполнения задачи до прерывания
         time_spent = 0  # Учет затраченных тактов на задачу
-        for i in range(self.interrupt_on * self.n_cores):  # Исполняем столько тактов, сколько можно до прерывания
+        self.core_distribution = dict(sorted(self.core_distribution.items(), key=lambda item: len(item[1]), reverse=False))
+        least_loaded_core = list(self.core_distribution.keys())[0]
+        self.core_distribution[least_loaded_core].append(task)
+
+        for i in range(self.interrupt_on * self.n_cores):  # Исполняем столько тактов, сколько можно до прерывания на каждом из ядер
             if task.remaining_time > 0:  # Заходим в тело только если задача не была уже выполнена
                 time_spent += 1
                 task.run()
                 if task.remaining_time <= 0:
                     print_to_processor_stream(self.processor_id, f"Задача {task.task_id} выполнена на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с.\n")
+                    self.core_distribution[least_loaded_core].pop(len(self.core_distribution[least_loaded_core]) - 1)
+                    self.core_distribution_count[least_loaded_core] += 1
                     break
         if task.execution_time - task.remaining_time > task.ttl:
             task.remaining_time = -1
             print_to_processor_stream(self.processor_id, f"Задача {task.task_id} превысила TTL на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с., тип задачи: {task.task_type}\n")
-            #print(f"Задача {task.task_id} превысила TTL на процессоре {self.processor_id}, время: {(self.total_time_spent / self.frequency) + self.start_time} с., тип задачи: {task.task_type}\n")
+            self.core_distribution_count[least_loaded_core] += 1
         if task.remaining_time > 0:
             print_to_processor_stream(self.processor_id, f"Задача {task.task_id} отправлена в ожидание процессором {self.processor_id}, кол-во периодов ожидания: {task.cycle}, время {(self.total_time_spent / self.frequency) + self.start_time} с.\n")
             task.cycle += 1

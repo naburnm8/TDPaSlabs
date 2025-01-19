@@ -36,11 +36,15 @@ def draw_ethernet_bar(ethernet: IEEE100GBIT) -> None:
     indicies = []
     for i in range(len(frames_occupancy)):
         indicies.append(i)
+    avg_occupancy = (sum(frames_occupancy) / len(frames_occupancy))
     plt.bar(indicies, frames_occupancy, color='blue', width=1)
+    plt.axhline(avg_occupancy, color='red', linestyle='--', linewidth=2, label="Средняя заполненность")
     plt.title("Заполненность кадров ethernet в процентах")
     plt.xlabel("Номер кадра")
     plt.ylabel("Заполненность")
     plt.show()
+    print(f"Средняя заполненность кадров: {avg_occupancy}%")
+
 def draw_group_bar(tasks_distribution: dict) -> None:
     CYCLE = "CYCLE_TASK"
     PERIODIC = "PERIODIC_TASK"
@@ -67,7 +71,15 @@ def draw_group_bar(tasks_distribution: dict) -> None:
 
     plt.show()
 
-
+def draw_core_bar(core_distribution: dict, id_processor: int) -> None:
+    converted_distribution = {str(core.core_id): value for core, value in core_distribution.items()}
+    cores = list(converted_distribution.keys())
+    tasks = list(converted_distribution.values())
+    plt.bar(cores, tasks, color='blue')
+    plt.title(f"Распределение по ядрам процессора {id_processor}")
+    plt.xlabel("Номер ядра")
+    plt.ylabel("Кол-во задач")
+    plt.show()
 def draw_all_bars(distribution: dict, ethernet: IEEE100GBIT, tasks_distrib_final: dict) -> None:
     draw_group_bar(tasks_distrib_final)
     draw_bar(distribution)
