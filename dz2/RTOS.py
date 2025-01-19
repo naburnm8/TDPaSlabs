@@ -182,6 +182,7 @@ class RTOS:  # Класс, реализующий логику пересылк�
             tasks_distribution_count[least_loaded_processor] += 1
             print(f"Задача с id {task.task_id} была переслана процессору {least_loaded_processor.processor_id}")
             for key in tasks_distribution.keys():
+                tasks_distribution[key] = sorted(tasks_distribution[key], key=lambda taskInside: taskInside.remaining_time)  # Сортируем список по возрастанию оставшегося времени ТТЛ
                 for task in tasks_distribution[key]:
                     key.execute(task)  # После присваивания исполняем задачи
                 tasks_distribution[key] = [task for task in tasks_distribution[key] if task.remaining_time > 0] # Очищаем исполненные задачи
